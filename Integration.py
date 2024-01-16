@@ -70,8 +70,8 @@ def GetFrequencies(properties_directory):
     #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
     for i in range(1,number_of_conformers+1):
         with open(f'PROP/TMPCONF{i}/vibspectrum','r') as f:
-            f.readlines()
-            print(f)
+            lines=f.readlines()
+            print(lines)
 
 FragmentationGraph(parent_ion)
 number_of_moieties_str=[]
