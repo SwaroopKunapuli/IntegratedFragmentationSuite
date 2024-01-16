@@ -69,7 +69,9 @@ def GetFrequencies(properties_directory):
     number_of_conformers=int(lines[0])
     #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
     for i in range(1,number_of_conformers+1):
-        
+        with open(f'PROP/TMPCONF{i}/vibspectrum','r') as f:
+            f.readlines()
+            print(f)
 
 FragmentationGraph(parent_ion)
 number_of_moieties_str=[]
@@ -96,5 +98,5 @@ if nci_hess_decision=="1":
     subprocess.run(["crest","cluster_optimized.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))) ,"--nci","--prop","hess","--T","5", "&&"],capture_output=True)
 if nci_hess_decision=="2":
     os.system("cp grow/cluster_optimized.xyz .")
-    subprocess.run(["crest","cluster_optimized.xyz","--chrg",str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),--nci","--T","5","&&"])
-    subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
+    subprocess.run(["crest","cluster_optimized.xyz","--chrg",str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--nci","--T","5","&&"])
+    subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
