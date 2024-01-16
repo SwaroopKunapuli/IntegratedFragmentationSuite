@@ -72,6 +72,7 @@ def GetFrequencies(properties_directory):
         with open(f'PROP/TMPCONF{i}/vibspectrum','r') as f:
             lines=f.readlines()
             print(lines)
+            words=lines.split()
 
 FragmentationGraph(parent_ion)
 number_of_moieties_str=[]
