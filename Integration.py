@@ -67,11 +67,26 @@ def GetFrequencies(properties_directory):
     f = open("cre_members",'r',)
     lines=f.readlines()
     number_of_conformers=int(lines[0])
+    ##subprocess.run(["cd",properties_directory])
     #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
     for i in range(1,number_of_conformers+1):
-        with open(f'PROP/TMPCONF{i}/vibspectrum','r') as f:
+        RXYZ_FILE=open(f'conformer{i}.rxyz','a+')
+        struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
+        RXYZ_FILE.write(struc_xyz.read())
+        with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
+            frequencies=[]
             lines=f.readlines()
-            print(lines)
+            l=0
+            for line in lines:
+                words=line.split()
+                if len(words)>=2 and words[1]=='a':
+                    frequencies.append(words[2])
+                    l=l+1
+            RXYZ_FILE.write('\n')
+            RXYZ_FILE.write("FREQUENCIES " +str(l)) 
+            RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
+        RXYZ_FILE.close()
+                
 
 FragmentationGraph(parent_ion)
 number_of_moieties_str=[]
@@ -85,10 +100,7 @@ else:
     subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
     subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
 os.chdir(fundamental_moieties[1])
-with open(".CHRG","w") as f:
-    f.write(charges[1],charges[0])
-with open(".UHF",'w') as f:
-    f.write(uhf[1],uhf[0])
+
 subprocess.run(["crest",xyz_files[1],"--qcg",xyz_files[0],"--nsolv",number_of_moieties_str[0],"--xtbiff","/home/software/xtbiff","--gfnff","--T","5","--nofix"])
 #os.system("cd grow")
 print("NCI + HESS (1) OR NCI_THEN_HESS (2)?")
@@ -96,7 +108,9 @@ nci_hess_decision=input()
 if nci_hess_decision=="1":
     os.system("cp grow/cluster_optimized.xyz .")
     subprocess.run(["crest","cluster_optimized.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))) ,"--nci","--prop","hess","--T","5", "&&"],capture_output=True)
+    GetFrequencies('PROP')
 if nci_hess_decision=="2":
     os.system("cp grow/cluster_optimized.xyz .")
     subprocess.run(["crest","cluster_optimized.xyz","--chrg",str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--nci","--T","5","&&"])
     subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
+    GetFrequencies('PROP')

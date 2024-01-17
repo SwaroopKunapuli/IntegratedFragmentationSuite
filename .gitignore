@@ -1,1 +1,5 @@
 .venv/
+*.xyz
+Ch*/
+U*/
+MSM_TEST_FILES/
