@@ -64,7 +64,7 @@ def FragmentationGraph(parent_ion):
         number_of_daughter_ions=number_of_daughter_ions+1
     print(number_of_daughter_ions)
 
-def crest_sampling(number_of_solvent_molecules):
+def crest_sampling(solute_xyz,solvent_xyz,number_of_solvent_molecules):
     number_of_moieties_str=[]
     for item in number_of_moieties:
         number_of_moieties_str.append(str(item))
@@ -77,7 +77,7 @@ def crest_sampling(number_of_solvent_molecules):
         subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
     os.chdir(fundamental_moieties[1])
 
-    subprocess.run(["crest",xyz_files[1],"--qcg",xyz_files[0],"--nsolv",number_of_solvent_molecules,"--xtbiff","/home/software/xtbiff","--gfnff","--T","5","--nofix"])
+    subprocess.run(["crest",solute_xyz,"--qcg",solvent_xyz,"--nsolv",number_of_solvent_molecules,"--xtbiff","/home/software/xtbiff","--gfnff","--T","5","--nofix"])
     #os.system("cd grow")
     print("NCI + HESS (1) OR NCI_THEN_HESS (2)?")
     nci_hess_decision=input()
