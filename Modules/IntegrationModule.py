@@ -1,22 +1,23 @@
 import subprocess
 import os
 
-def FragmentationGraph(parent_ion,n):
+def FragmentationGraph(parent_ion,n,charges):
     levels=0
-    [number_of_moieties,fundamental_moieties,levels]=parent_ion
+    [number_of_moieties,fundamental_moieties,total_charge,levels]=parent_ion
     daughter_ions=[]
     seen = set()
+    #For the first level of daugther ions produced from parent ion
     for i in range(0,n):
         d_number_of_moieties=number_of_moieties[:]
         d_number_of_moieties[i]=d_number_of_moieties[i]-1
-        daughter_ions.append([number_of_moieties,d_number_of_moieties,fundamental_moieties,levels+1])
+        daughter_ions.append([number_of_moieties,d_number_of_moieties,fundamental_moieties,sum([x*y for x,y in zip(d_number_of_moieties,charges)]),levels+1])
         del(d_number_of_moieties)
     levels=levels+1
-
+    #For the second level of daughter ions produced from those daughter ions (unique listing)
     max_levels=50
     for i in range(2,max_levels):
         for item in daughter_ions:
-            if item[3]==i-1:
+            if item[4]==i-1:
                 for j in range(0,n):
                     d_number_of_moieties=item[1][:]
                     d_number_of_moieties[j]=d_number_of_moieties[j]-1
@@ -24,7 +25,7 @@ def FragmentationGraph(parent_ion,n):
                         k=tuple(d_number_of_moieties)
                         if k not in seen:
                             seen.add(k)
-                            daughter_ions.append([item[1][:],d_number_of_moieties,fundamental_moieties,i])
+                            daughter_ions.append([item[1][:],d_number_of_moieties,fundamental_moieties,sum([x*y for x,y in zip(d_number_of_moieties,charges)]),i])
                     del(d_number_of_moieties)
     number_of_daughter_ions=0
     for item in daughter_ions:
