@@ -1,38 +1,6 @@
-import os
-import sys
-import numpy as np
 import subprocess
+import os
 
-#os.system("crest --help")
-#subprocess.run(["crest","--help"])
-
-n=int(input("Number of fundamental moieties: "))
-print(n)
-xyz_files = []
-fundamental_moieties = []
-charges = []
-uhf = []
-number_of_moieties = []
-print("If .xyz files of the Fundamental Moieties are in this directory, enter their name. If not, enter the location + name of the files")
-for i in range(1,n+1):
-    xyz_files.append(input())
-    print("label:")
-    fundamental_moieties.append(input())
-    print("charge:")
-    charges.append(input())
-    print("Multiplicity:")
-    uhf.append(input())
-print(fundamental_moieties)
-print("Enter the composition of the precursor ion")
-for i in range(1,n+1):
-    print(fundamental_moieties[i-1],":")
-    number_of_moieties.append(int(input()))
-print("Parent non-covalent Ion at level 0 of fragmentation has following molecular entities : ")
-for i in range(0,n):
-   print(number_of_moieties[i],fundamental_moieties[i])
-levels=0
-parent_ion=[number_of_moieties,fundamental_moieties,levels]
-print(parent_ion)
 def FragmentationGraph(parent_ion,n):
     levels=0
     [number_of_moieties,fundamental_moieties,levels]=parent_ion
@@ -65,7 +33,8 @@ def FragmentationGraph(parent_ion,n):
     print(number_of_daughter_ions)
 
 # using CREST software to sample the conformational space
-def crest_sampling(solute_xyz,solvent_xyz,number_of_solvent_molecules):
+def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
+    [number_of_moieties,fundamental_moieties,levels]=parent_ion
     number_of_moieties_str=[]
     for item in number_of_moieties:
         number_of_moieties_str.append(str(item))
@@ -120,7 +89,4 @@ def GetFrequencies(properties_directory):
 # Append to M3C Fragment Database in the format prescribed
 def MakeM3CFragmentDatabase():
     M3C_Fragmentation_Database=open('M3C_Fragmentation_Database.txt','a+')
-
-FragmentationGraph(parent_ion,n)
-#print("")
-crest_sampling(xyz_files[1],xyz_files[0],"1")
+    
