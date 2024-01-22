@@ -1,0 +1,7 @@
+[project]
+name = "IntegratedFragmentationSuite"
+version = "1.0"
+description = "Integrated python suite to simulate fragmentation of non-covalent clusters in soft-ionisation mass spectrometry."
+authors = [{name="Swaroop Kunapuli} {email= "svskunapuli@unistra.fr"}]
+dependencies = ["crest","numpy"]
+
