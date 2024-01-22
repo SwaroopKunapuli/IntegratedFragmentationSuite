@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import subprocess
-import IntegrationModule
+import Modules
 
 #os.system("crest --help")
 #subprocess.run(["crest","--help"])
@@ -35,6 +35,6 @@ levels=0
 parent_ion=[number_of_moieties,fundamental_moieties,levels]
 print(parent_ion)
 
-IntegrationModule.FragmentationGraph(parent_ion,n)
+Modules.FragmentationGraph(parent_ion,n)
 #print("")
-IntegrationModule.crest_sampling(parent_ion,xyz_files[1],xyz_files[0],"1",xyz_files)
+Modules.crest_sampling(parent_ion,xyz_files[1],xyz_files[0],"1",xyz_files)
