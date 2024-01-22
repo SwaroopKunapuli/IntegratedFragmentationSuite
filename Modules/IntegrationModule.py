@@ -26,6 +26,8 @@ def FragmentationGraph(parent_ion,n,charges):
                         if k not in seen:
                             seen.add(k)
                             daughter_ions.append([item[1][:],d_number_of_moieties,fundamental_moieties,sum([x*y for x,y in zip(d_number_of_moieties,charges)]),i])
+                        else:
+                            daughter_ions[-1][0].append(item[1][:])
                     del(d_number_of_moieties)
     number_of_daughter_ions=0
     for item in daughter_ions:
