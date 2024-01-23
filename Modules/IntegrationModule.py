@@ -39,7 +39,7 @@ def FragmentationGraph(parent_ion,n,charges):
 
 # using CREST software to sample the conformational space
 def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
-    [number_of_moieties,fundamental_moieties,levels]=parent_ion
+    [number_of_moieties,fundamental_moieties,charges,levels]=parent_ion
     number_of_moieties_str=[]
     for item in number_of_moieties:
         number_of_moieties_str.append(str(item))

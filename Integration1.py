@@ -37,4 +37,4 @@ print(parent_ion)
 
 Modules.FragmentationGraph(parent_ion,n,charges)
 #print("")
-Modules.crest_sampling(parent_ion,xyz_files[1],xyz_files[0],"1",xyz_files)
+#Modules.crest_sampling(parent_ion,xyz_files[1],xyz_files[0],"1",xyz_files)
