@@ -91,7 +91,11 @@ def GetFrequencies(properties_directory):
             RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
         RXYZ_FILE.close()
                 
-# Append to M3C Fragment Database in the format prescribed
-def MakeM3CFragmentDatabase():
-    M3C_Fragmentation_Database=open('M3C_Fragmentation_Database.txt','a+')
+# Class to generate the following information related to each parent/daughter ion from the fragmentation graph
+# INPUT:: 1) Object is the the parent/daugther ion 
+#         2) Input is the way we reach the parent/daughter ion from their daughter ions (best cluster conformer from already done CREST conformer sampling) 
+#         3) Which CREST QCG solute-solvent combination is the best 
+# PROCESSING: 4) IMPLEMENTING THE FUNCTION FOR a) QCG cluster growth b) NCI conformer sampling c) Hessian Calculation for FREQUENCIES AND TOTAL ENERGY 
+# RETURNING: 5) RETURNING the a) .rxyz files b) append to M3C Fragment Database c) best cluster conformer to go to their parent ion object
     
+#class Cluster_Combination_Object:
