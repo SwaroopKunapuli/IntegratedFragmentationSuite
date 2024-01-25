@@ -13,29 +13,29 @@ def FragmentationGraph(parent_ion,n,charges):
         daughter_ions.append([[number_of_moieties],d_number_of_moieties,fundamental_moieties,sum([x*y for x,y in zip(d_number_of_moieties,charges)]),levels+1])
         del(d_number_of_moieties)
     levels=levels+1
-    #For the second level of daughter ions produced from those daughter ions (unique listing)
-    max_levels=50
-    for i in range(2,max_levels):
+    break_out_flag=False
+    while break_out_flag==False: 
         for item in daughter_ions:
-            if item[4]==i-1:
+            if item[4]==levels: 
                 for j in range(0,n):
                     d_number_of_moieties=item[1][:]
                     d_number_of_moieties[j]=d_number_of_moieties[j]-1
-                    if d_number_of_moieties[j]>=0:
+                    if all(numbers_d>=0 for numbers_d in d_number_of_moieties):
                         k=tuple(d_number_of_moieties)
                         if k not in seen:
                             seen.add(k)
-                            daughter_ions.append([[item[1][:]],d_number_of_moieties,fundamental_moieties,sum([x*y for x,y in zip(d_number_of_moieties,charges)]),i])
+                            daughter_ions.append([[item[1][:]],d_number_of_moieties,fundamental_moieties,sum([x*y for x,y in zip(d_number_of_moieties,charges)]),levels+1])
                         else:
                             for index, value in enumerate(daughter_ions):
                                 if value[1][:]==d_number_of_moieties:
                                         daughter_ions[index][0].append(item[1][:])
+                    if all(numbers_d<=0 for numbers_d in d_number_of_moieties):
+                        break_out_flag=True
                     del(d_number_of_moieties)
-    number_of_daughter_ions=0
-    for item in daughter_ions:
-        print(item)
-        number_of_daughter_ions=number_of_daughter_ions+1
-    print(number_of_daughter_ions)
+        levels=levels+1
+    print("Daughter ions (cluster combinations) from this parent ion are: ", *daughter_ions, sep='\n')
+    print("Total number of ions (cluster combinations): " + str(len(daughter_ions)))
+    print("Number of levels in the Fragmentation Graph : " + str(levels))
 
 # using CREST software to sample the conformational space
 def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
