@@ -5,4 +5,4 @@ U*/
 MSM_TEST_FILES/
 __pycache__/
 Packmol_Testing/
-pypackmol/
+Modules/Extra_Third_Party_Packages/pypackmol/

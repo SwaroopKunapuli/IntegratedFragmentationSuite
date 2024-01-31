@@ -1,5 +1,6 @@
 import subprocess
 import os
+import pypackmol as pyp
 
 def FragmentationGraph(parent_ion,n,charges):
     levels=0
@@ -93,11 +94,28 @@ def GetFrequencies(properties_directory):
                 
 # Class to generate the following information related to each parent/daughter ion from the fragmentation graph
 # INPUT:: 1) Object is the the parent/daugther ion 
-#         2) Input is the way we reach the parent/daughter ion from their daughter ions (best cluster conformer from already done CREST conformer sampling) 
-#         3) Which CREST QCG solute-solvent combination is the best 
-# PROCESSING: 4) IMPLEMENTING THE FUNCTION FOR a) QCG cluster growth b) NCI conformer sampling c) Hessian Calculation for FREQUENCIES AND TOTAL ENERGY 
-# RETURNING: 5) RETURNING the a) .rxyz files b) append to M3C Fragment Database c) best cluster conformer to go to their parent ion object
+#         2) Packmol generation of the .xyz file of the parent/daughter ion with pypackmol interdace
+# PROCESSING: 4) IMPLEMENTING THE FUNCTION FOR a) (Optional) Optimisation of the structure
+#                                              b) NCI conformer sampling 
+#                                              c) Hessian Calculation for FREQUENCIES AND TOTAL ENERGY 
+# RETURNING: 5) RETURNING the a) .rxyz files 
+#                             b) append to M3C Fragment Database 
+#                             c) best cluster conformer to go to their parent ion object
     
-#class Cluster_Combination_Object:
+class Cluster_Combination_Object:
+    def __init__(self,ion,xyz_files,number_of_fundamental_moieties):
+        """
+        Generating packed .xyz file from Packmol with pypackmol wrapper for each of the ions in the parent/daughter ions list.
+        
+        """
+        self.ion = ion
+        self.xyz_files=xyz_files
+        self.number_of_fundamental_moieties =number_of_fundamental_moieties
+
+    def packmol_xyz_file_generation(self):
+        pm = pyp.Packmol(dimension=20)
+        for i in range(0,self.number_of_fundamental_moieties):
+            pm.add_structure(self.xyz_files[i],count=self.ion[1][i])
+        result=pm.pack(output="FindA_Way_TO_PUT_THIS_OUTPUT_FILE.xyz")
 
 

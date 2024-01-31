@@ -81,7 +81,7 @@ def convert_to_xyz(input_data,input_format="auto",force_field="uff") :
             raise ImportWarning["Cannot import OpenBabel for format conversion. " +
                        "Please use xyz format instead."]
         # Construct a openbabel `pybel.Molecule` object then export to xyz
-        if input_format=="smi" or imput_format=="smiles" :
+        if input_format=="smi" or input_format=="smiles" :
             mol=pb.readstring(input_format,input_data)
             mol.make3D(forcefield=force_field,steps=200)
         else :
