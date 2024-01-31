@@ -68,7 +68,7 @@ def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules
 
 # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
 def GetFrequencies(properties_directory):
-    f = open("cre_members",'r',)
+    f = open("cre_members",'r')
     lines=f.readlines()
     number_of_conformers=int(lines[0])
     ##subprocess.run(["cd",properties_directory])
@@ -99,3 +99,5 @@ def GetFrequencies(properties_directory):
 # RETURNING: 5) RETURNING the a) .rxyz files b) append to M3C Fragment Database c) best cluster conformer to go to their parent ion object
     
 #class Cluster_Combination_Object:
+
+
