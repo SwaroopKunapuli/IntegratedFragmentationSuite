@@ -1,10 +1,10 @@
-import subprocess
-import os
-import pypackmol as pyp
+import Modules.pypackmol as pyp
+
 
 def FragmentationGraph(parent_ion,n,charges):
     levels=0
     [number_of_moieties,fundamental_moieties,total_charge,levels]=parent_ion
+    global daughter_ions
     daughter_ions=[]
     seen = set()
     #For the first level of daugther ions produced from parent ion
@@ -37,60 +37,9 @@ def FragmentationGraph(parent_ion,n,charges):
     print("Daughter ions (cluster combinations) from this parent ion are: ", *daughter_ions, sep='\n')
     print("Total number of ions (cluster combinations): " + str(len(daughter_ions)))
     print("Number of levels in the Fragmentation Graph : " + str(levels))
+    return daughter_ions
 
-# using CREST software to sample the conformational space
-def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
-    [number_of_moieties,fundamental_moieties,charges,levels]=parent_ion
-    number_of_moieties_str=[]
-    for item in number_of_moieties:
-        number_of_moieties_str.append(str(item))
-    if os.path.exists(fundamental_moieties[1]):
-        subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
-        subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
-    else:
-        subprocess.run(["mkdir",fundamental_moieties[1]])
-        subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
-        subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
-    os.chdir(fundamental_moieties[1])
 
-    subprocess.run(["crest",solute_xyz,"--qcg",solvent_xyz,"--nsolv",number_of_solvent_molecules,"--xtbiff","/home/software/xtbiff","--gfnff","--T","5","--nofix"])
-    #os.system("cd grow")
-    print("NCI + HESS (1) OR NCI_THEN_HESS (2)?")
-    nci_hess_decision=input()
-    if nci_hess_decision=="1":
-        os.system("cp grow/cluster_optimized.xyz .")
-        subprocess.run(["crest","cluster_optimized.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))) ,"--nci","--prop","hess","--T","5", "&&"],capture_output=True)
-        GetFrequencies('PROP')
-    if nci_hess_decision=="2":
-        os.system("cp grow/cluster_optimized.xyz .")
-        subprocess.run(["crest","cluster_optimized.xyz","--chrg",str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--nci","--T","5","&&"])
-        subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
-        GetFrequencies('PROP')
-
-# Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
-def GetFrequencies(properties_directory):
-    f = open("cre_members",'r')
-    lines=f.readlines()
-    number_of_conformers=int(lines[0])
-    ##subprocess.run(["cd",properties_directory])
-    #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
-    for i in range(1,number_of_conformers+1):
-        RXYZ_FILE=open(f'conformer{i}.rxyz','a+')
-        struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
-        RXYZ_FILE.write(struc_xyz.read())
-        with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
-            frequencies=[]
-            lines=f.readlines()
-            l=0
-            for line in lines:
-                words=line.split()
-                if len(words)>=2 and words[1]=='a':
-                    frequencies.append(words[2])
-                    l=l+1
-            RXYZ_FILE.write('\n')
-            RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
-            RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
-        RXYZ_FILE.close()
                 
 # Class to generate the following information related to each parent/daughter ion from the fragmentation graph
 # INPUT:: 1) Object is the the parent/daugther ion 
@@ -117,5 +66,57 @@ class Cluster_Combination_Object:
         for i in range(0,self.number_of_fundamental_moieties):
             pm.add_structure(self.xyz_files[i],count=self.ion[1][i])
         result=pm.pack(output="FindA_Way_TO_PUT_THIS_OUTPUT_FILE.xyz")
+    
+    # using CREST software to sample the conformational space
+    def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
+        [number_of_moieties,fundamental_moieties,charges,levels]=parent_ion
+        number_of_moieties_str=[]
+        for item in number_of_moieties:
+            number_of_moieties_str.append(str(item))
+        if os.path.exists(fundamental_moieties[1]):
+            subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
+            subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
+        else:
+            subprocess.run(["mkdir",fundamental_moieties[1]])
+            subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
+            subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
+        os.chdir(fundamental_moieties[1])
+
+        print("NCI + HESS (1) OR NCI_THEN_HESS (2)?")
+        nci_hess_decision=input()
+        if nci_hess_decision=="1":
+            os.system("cp grow/cluster_optimized.xyz .")
+            subprocess.run(["crest","cluster_optimized.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))) ,"--nci","--prop","hess","--T","5", "&&"],capture_output=True)
+            GetFrequencies('PROP')
+        if nci_hess_decision=="2":
+            os.system("cp grow/cluster_optimized.xyz .")
+            subprocess.run(["crest","cluster_optimized.xyz","--chrg",str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--nci","--T","5","&&"])
+            subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
+            GetFrequencies('PROP')
+
+    # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
+    def GetFrequencies(properties_directory):
+        f = open("cre_members",'r')
+        lines=f.readlines()
+        number_of_conformers=int(lines[0])
+        ##subprocess.run(["cd",properties_directory])
+        #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
+        for i in range(1,number_of_conformers+1):
+            RXYZ_FILE=open(f'conformer{i}.rxyz','a+')
+            struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
+            RXYZ_FILE.write(struc_xyz.read())
+            with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
+                frequencies=[]
+                lines=f.readlines()
+                l=0
+                for line in lines:
+                    words=line.split()
+                    if len(words)>=2 and words[1]=='a':
+                        frequencies.append(words[2])
+                        l=l+1
+                RXYZ_FILE.write('\n')
+                RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
+                RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
+            RXYZ_FILE.close()
 
 
