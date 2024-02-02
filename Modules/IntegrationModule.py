@@ -1,4 +1,6 @@
 import Modules.pypackmol as pyp
+import os
+import subprocess
 
 def FragmentationGraph(parent_ion,n,charges):
     levels=0
@@ -36,7 +38,7 @@ def FragmentationGraph(parent_ion,n,charges):
     print("Daughter ions (cluster combinations) from this parent ion are: ", *daughter_ions, sep='\n')
     print("Total number of ions (cluster combinations): " + str(len(daughter_ions)))
     print("Number of levels in the Fragmentation Graph : " + str(levels))
-    return daughter_ions
+    return daughter_ions, levels
 
 
                 
@@ -61,13 +63,18 @@ class Cluster_Combination_Object:
         self.number_of_fundamental_moieties =number_of_fundamental_moieties
 
     def packmol_xyz_file_generation(self):
-        pm = pyp.Packmol(dimension=20)
+        pm = pyp.Packmol(dimension=10)
         for i in range(0,self.number_of_fundamental_moieties):
             pm.add_structure(self.xyz_files[i],count=self.ion[1][i])
-        result=pm.pack(output="FindA_Way_TO_PUT_THIS_OUTPUT_FILE.xyz")
+        global output_xyz
+        global output_dir
+        output_dir="{}{}_{}{}".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1])
+        output_xyz="{}{}_{}{}.xyz".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1])
+        result=pm.pack(output=str(output_xyz))
+        return output_xyz, output_dir
     
     # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
-    def GetFrequencies(properties_directory):
+    def GetFrequencies(self,properties_directory):
         f = open("cre_members",'r')
         lines=f.readlines()
         number_of_conformers=int(lines[0])
@@ -93,31 +100,19 @@ class Cluster_Combination_Object:
 
 
     # using CREST software to sample the conformational space
-    def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
-        [number_of_moieties,fundamental_moieties,charges,levels]=parent_ion
-        number_of_moieties_str=[]
-        for item in number_of_moieties:
-            number_of_moieties_str.append(str(item))
-        if os.path.exists(fundamental_moieties[1]):
-            subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
-            subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
+    def crest_sampling(self,output_xyz,output_dir ):
+        if os.path.exists(output_dir):
+            subprocess.run(["cp",output_xyz,output_dir])
         else:
-            subprocess.run(["mkdir",fundamental_moieties[1]])
-            subprocess.run(["cp",xyz_files[0],fundamental_moieties[1]])
-            subprocess.run(["cp",xyz_files[1],fundamental_moieties[1]])
-        os.chdir(fundamental_moieties[1])
+            subprocess.run(["mkdir",output_dir])
+            subprocess.run(["cp",output_xyz,output_dir])
+        os.chdir(output_dir)
+        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen","0.5","&&"])
+        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"])
+        if os.path.exists('PROP'):
+            self.GetFrequencies('PROP')
 
-        print("NCI + HESS (1) OR NCI_THEN_HESS (2)?")
-        nci_hess_decision=input()
-        if nci_hess_decision=="1":
-            os.system("cp grow/cluster_optimized.xyz .")
-            subprocess.run(["crest","cluster_optimized.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))) ,"--nci","--prop","hess","--T","5", "&&"],capture_output=True)
-            GetFrequencies('PROP')
-        if nci_hess_decision=="2":
-            os.system("cp grow/cluster_optimized.xyz .")
-            subprocess.run(["crest","cluster_optimized.xyz","--chrg",str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--nci","--T","5","&&"])
-            subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
-            GetFrequencies('PROP')
+        
 
     
 
