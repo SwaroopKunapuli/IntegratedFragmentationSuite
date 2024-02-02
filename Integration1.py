@@ -12,9 +12,9 @@ import sys
 import numpy as np
 import subprocess
 import time
-import Modules
-import Modules.IntegrationModule as IM
-import Modules.pypackmol as pyp
+from Modules.IntegrationModule import FragmentationGraph
+from Modules.IntegrationModule import Cluster_Combination_Object
+
 
 #os.system("crest --help")
 #subprocess.run(["crest","--help"])
@@ -47,11 +47,11 @@ levels=0
 parent_ion=[number_of_moieties,fundamental_moieties, sum([x*y for x,y in zip(number_of_moieties,charges)]),levels]
 print(parent_ion)
 
-daughter_ions=Modules.FragmentationGraph(parent_ion,n,charges)
+daughter_ions=FragmentationGraph(parent_ion,n,charges)
 #print("")
 #Modules.crest_sampling(parent_ion,xyz_files[1],xyz_files[0],"1",xyz_files)
 print("It is reaching here")
 print(daughter_ions)
-ion_object=IM.Cluster_Combination_Object(daughter_ions[0],xyz_files,n)
+ion_object=Cluster_Combination_Object(daughter_ions[0],xyz_files,n)
 ion_object.packmol_xyz_file_generation()
 

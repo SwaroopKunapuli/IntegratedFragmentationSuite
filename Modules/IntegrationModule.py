@@ -1,6 +1,5 @@
 import Modules.pypackmol as pyp
 
-
 def FragmentationGraph(parent_ion,n,charges):
     levels=0
     [number_of_moieties,fundamental_moieties,total_charge,levels]=parent_ion
@@ -67,6 +66,32 @@ class Cluster_Combination_Object:
             pm.add_structure(self.xyz_files[i],count=self.ion[1][i])
         result=pm.pack(output="FindA_Way_TO_PUT_THIS_OUTPUT_FILE.xyz")
     
+    # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
+    def GetFrequencies(properties_directory):
+        f = open("cre_members",'r')
+        lines=f.readlines()
+        number_of_conformers=int(lines[0])
+        ##subprocess.run(["cd",properties_directory])
+        #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
+        for i in range(1,number_of_conformers+1):
+            RXYZ_FILE=open(f'conformer{i}.rxyz','a+')
+            struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
+            RXYZ_FILE.write(struc_xyz.read())
+            with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
+                frequencies=[]
+                lines=f.readlines()
+                l=0
+                for line in lines:
+                    words=line.split()
+                    if len(words)>=2 and words[1]=='a':
+                        frequencies.append(words[2])
+                        l=l+1
+                RXYZ_FILE.write('\n')
+                RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
+                RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
+            RXYZ_FILE.close()
+
+
     # using CREST software to sample the conformational space
     def crest_sampling(parent_ion,solute_xyz,solvent_xyz,number_of_solvent_molecules,xyz_files):
         [number_of_moieties,fundamental_moieties,charges,levels]=parent_ion
@@ -94,29 +119,6 @@ class Cluster_Combination_Object:
             subprocess.run(["crest","crest_best.xyz","--chrg", str(int(charges[1])+(int(charges[0])*int(number_of_moieties[0]))),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],capture_output=True)
             GetFrequencies('PROP')
 
-    # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
-    def GetFrequencies(properties_directory):
-        f = open("cre_members",'r')
-        lines=f.readlines()
-        number_of_conformers=int(lines[0])
-        ##subprocess.run(["cd",properties_directory])
-        #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
-        for i in range(1,number_of_conformers+1):
-            RXYZ_FILE=open(f'conformer{i}.rxyz','a+')
-            struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
-            RXYZ_FILE.write(struc_xyz.read())
-            with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
-                frequencies=[]
-                lines=f.readlines()
-                l=0
-                for line in lines:
-                    words=line.split()
-                    if len(words)>=2 and words[1]=='a':
-                        frequencies.append(words[2])
-                        l=l+1
-                RXYZ_FILE.write('\n')
-                RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
-                RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
-            RXYZ_FILE.close()
+    
 
 
