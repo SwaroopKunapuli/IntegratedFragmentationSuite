@@ -48,13 +48,16 @@ parent_ion=[number_of_moieties,fundamental_moieties, sum([x*y for x,y in zip(num
 print(parent_ion)
 
 daughter_ions, levels = FragmentationGraph(parent_ion,n,charges)
-#print("")
-#Modules.crest_sampling(parent_ion,xyz_files[1],xyz_files[0],"1",xyz_files)
-#for ion in daughter_ions:
-#    ion_object=Cluster_Combination_Object(ion,xyz_files,n)
-#    output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
-#    ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
-ion=daughter_ions[2]
-ion_object=Cluster_Combination_Object(ion,xyz_files,n)
-output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
-ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
+
+#ion_object=Cluster_Combination_Object(parent_ion,xyz_files,n)
+#output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
+#ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
+
+
+#FRAGMENTS_DATABASE=open('FRAGMENTS_DATABASE.TXT','a+')
+
+for ion in daughter_ions[:-1]:
+    ion_object=Cluster_Combination_Object(ion,xyz_files,n)
+    output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
+    ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
+    os.chdir("../")

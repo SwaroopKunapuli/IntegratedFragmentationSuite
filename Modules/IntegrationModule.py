@@ -65,39 +65,47 @@ class Cluster_Combination_Object:
     def packmol_xyz_file_generation(self):
         pm = pyp.Packmol(dimension=10)
         for i in range(0,self.number_of_fundamental_moieties):
-            pm.add_structure(self.xyz_files[i],count=self.ion[1][i])
+            if self.ion[1][i]>0:
+                pm.add_structure(self.xyz_files[i],count=self.ion[1][i],input_format="xyz")
         global output_xyz
         global output_dir
-        output_dir="{}{}_{}{}".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1])
-        output_xyz="{}{}_{}{}.xyz".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1])
+        print(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
+        output_dir="{}{}_{}{}_{}{}".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
+        output_xyz="{}{}_{}{}_{}{}.xyz".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
         result=pm.pack(output=str(output_xyz))
         return output_xyz, output_dir
     
     # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
     def GetFrequencies(self,properties_directory):
-        f = open("cre_members",'r')
-        lines=f.readlines()
-        number_of_conformers=int(lines[0])
-        ##subprocess.run(["cd",properties_directory])
-        #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
-        for i in range(1,number_of_conformers+1):
-            RXYZ_FILE=open(f'conformer{i}.rxyz','a+')
-            struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
-            RXYZ_FILE.write(struc_xyz.read())
-            with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
-                frequencies=[]
-                lines=f.readlines()
-                l=0
-                for line in lines:
-                    words=line.split()
-                    if len(words)>=2 and words[1]=='a':
-                        frequencies.append(words[2])
-                        l=l+1
-                RXYZ_FILE.write('\n')
-                RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
-                RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
-            RXYZ_FILE.close()
-
+        if os.path.exists('cre_members'):
+            f = open("cre_members",'r')
+            lines=f.readlines()
+            number_of_conformers=int(lines[0])
+            Negative_conformer_list_file=open("Negative_Frequency_conformers_{}.txt".format(output_dir),'a+')
+            #subprocess.run(["cd",properties_directory])
+            #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
+            for i in range(1,number_of_conformers+1):
+                RXYZ_FILE=open(f'{output_dir}_{i}.rxyz','a+')
+                struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
+                RXYZ_FILE.write(struc_xyz.read())
+                with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
+                    frequencies=[]
+                    lines=f.readlines()
+                    l=0
+                    for line in lines:
+                        words=line.split()
+                        if len(words)>=2 and words[1]=='a':
+                            frequencies.append(words[2])
+                            l=l+1
+                            if float(words[2])<0:
+                                Negative_conformer_list_file.write("Negative frequencies in conformer{}".format(i))
+                    RXYZ_FILE.write('\n')
+                    RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
+                    RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
+                RXYZ_FILE.close()
+            Negative_conformer_list_file.close()
+        else:
+            print("No cre_members file!!")
 
     # using CREST software to sample the conformational space
     def crest_sampling(self,output_xyz,output_dir ):
@@ -107,8 +115,10 @@ class Cluster_Combination_Object:
             subprocess.run(["mkdir",output_dir])
             subprocess.run(["cp",output_xyz,output_dir])
         os.chdir(output_dir)
-        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen","0.5","&&"])
-        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--for","crest_conformers.xyz","--prop","hess","--T","5","&&"])
+        crest_nci_output=open("crest_nci_output.txt","w")
+        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen","0.5","&&"],stdout=crest_nci_output)
+        crest_hess_output=open('crest_hess_output.txt','w')
+        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--gfn2//gfnff","--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],stdout=crest_hess_output)
         if os.path.exists('PROP'):
             self.GetFrequencies('PROP')
 
