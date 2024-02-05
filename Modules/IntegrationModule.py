@@ -52,13 +52,16 @@ def FragmentationGraph(parent_ion,n,charges):
 #                             b) append to M3C Fragment Database 
 #                             c) best cluster conformer to go to their parent ion object
     
-class Cluster_Combination_Object:
+class Cluster_Combination_Object(object):
+    ion_dict={}
     def __init__(self,ion,xyz_files,number_of_fundamental_moieties):
         """
         Generating packed .xyz file from Packmol with pypackmol wrapper for each of the ions in the parent/daughter ions list.
         
         """
         self.ion = ion
+        name_ion="{}{}_{}{}_{}{}".format(ion[1][0],ion[2][0],ion[1][1],ion[2][1],ion[1][2],ion[2][2])
+        Cluster_Combination_Object.ion_dict[name_ion] = self
         self.xyz_files=xyz_files
         self.number_of_fundamental_moieties =number_of_fundamental_moieties
 
@@ -121,9 +124,4 @@ class Cluster_Combination_Object:
         subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--gfn2//gfnff","--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],stdout=crest_hess_output)
         if os.path.exists('PROP'):
             self.GetFrequencies('PROP')
-
-        
-
-    
-
-
+    #def add_to_fragment_database(self,):

@@ -1,0 +1,32 @@
+BEGIN GOPTIONS
+ systemRadius = 20.0
+ overlappingRadius = 0.1
+
+ useRandomWalkers = FALSE
+ randomWalkStepRadius = 1.0
+END GOPTIONS
+
+BEGIN EXCITATION_ENERGY_SCAN
+ excitationEnergy =  0.0:60.0:180 
+END EXCITATION_ENERGY_SCAN
+
+
+BEGIN MARKOV_CHAIN
+ task = V,S:-1:1,V,S:-1:1
+ ##task = V,R,S:-1:1,V,R,S:-1:1
+ ##task = V,T,S:0,V,T,S:1:-1
+ burnInFraction = 0.1
+ reactives = 4U4ChCl1Cl_n(6)
+ tracking = energy
+ excitationEnergy = 60.0
+ numberOfExperiments = 10
+ numberOfEvents = 50000
+ historyFileFrequency = 100
+ energyHistoryFile = energy.dat
+ histogramFile = histogram.dat
+END MARKOV_CHAIN
+
+BEGIN FRAGMENTS_DATABASE
+
+
+END FRAGMENTS_DATABASE
