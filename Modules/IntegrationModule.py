@@ -60,7 +60,7 @@ class Cluster_Combination_Object(object):
         
         """
         self.ion = ion
-        name_ion="{}{}_{}{}_{}{}".format(ion[1][0],ion[2][0],ion[1][1],ion[2][1],ion[1][2],ion[2][2])
+        name_ion="{}{}_{}{}_{}{}".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
         Cluster_Combination_Object.ion_dict[name_ion] = self
         self.xyz_files=xyz_files
         self.number_of_fundamental_moieties =number_of_fundamental_moieties

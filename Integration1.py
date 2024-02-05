@@ -22,7 +22,7 @@ xyz_files = []
 fundamental_moieties = []
 charges = []
 uhf = []
-number_of_moieties = []
+
 for i in range(1,n+1):
     print("If .xyz files of the Fundamental Moieties are in this directory, enter their name. If not, enter the location + name of the files")
     xyz_files.append(input())
@@ -34,6 +34,7 @@ for i in range(1,n+1):
     uhf.append(input())
 print(fundamental_moieties)
 for number_of_precursors in range(0,2):
+    number_of_moieties=[]
     print("Enter the composition of the precursor ion")
     for i in range(1,n+1):
         print(fundamental_moieties[i-1],":")
@@ -57,10 +58,12 @@ for number_of_precursors in range(0,2):
 
     for ion in daughter_ions[:-1]:
         name="{}{}_{}{}_{}{}".format(ion[1][0],ion[2][0],ion[1][1],ion[2][1],ion[1][2],ion[2][2])
-        ion_object=Cluster_Combination_Object(ion,xyz_files,n)
         ## FINDING A WAY TO ONLY SAMPLE CONFORMERS FOR CLUSTERS THAT WERE NOT SAMPLED BEFORE
-        #if name not in Cluster_Combination_Object.ion_dict: 
-        output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
-        ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
-        os.chdir("../")
-        print(Cluster_Combination_Object.ion_dict)
+        if name in Cluster_Combination_Object.ion_dict:
+            print("Cluster already sampled")
+        if name not in Cluster_Combination_Object.ion_dict: 
+            ion_object=Cluster_Combination_Object(ion,xyz_files,n)
+            output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
+            ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
+            os.chdir("../")
+            print(Cluster_Combination_Object.ion_dict)
