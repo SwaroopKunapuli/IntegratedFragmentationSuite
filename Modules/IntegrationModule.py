@@ -84,13 +84,21 @@ class Cluster_Combination_Object(object):
             f = open("cre_members",'r')
             lines=f.readlines()
             number_of_conformers=int(lines[0])
+            Negative_conformer=False
             Negative_conformer_list_file=open("Negative_Frequency_conformers_{}.txt".format(output_dir),'a+')
-            #subprocess.run(["cd",properties_directory])
-            #Printinf rxyz files for conformers from frequencies, electronic energies and coordinates in PROP/
             for i in range(1,number_of_conformers+1):
                 RXYZ_FILE=open(f'{output_dir}_{i}.rxyz','a+')
                 struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
-                RXYZ_FILE.write(struc_xyz.read())
+                struc_xyz_lines=struc_xyz.readlines()
+                RXYZ_FILE.write(struc_xyz_lines[0])
+                xtb_out=open(f'{properties_directory}/TMPCONF{i}/xtb.out','r')
+                xtb_out_lines=xtb_out.readlines()
+                for line in reversed(list(xtb_out_lines)): 
+                    words=line.split()
+                    if len(words)>3 and words[1]=='total' and words[2]=='energy':
+                        energy = words[3]
+                RXYZ_FILE.write("Energy = {}\n".format(energy))
+                RXYZ_FILE.write("".join(line for line in struc_xyz_lines[2:]))
                 with open(f'{properties_directory}/TMPCONF{i}/vibspectrum','r') as f:
                     frequencies=[]
                     lines=f.readlines()
@@ -101,7 +109,9 @@ class Cluster_Combination_Object(object):
                             frequencies.append(words[2])
                             l=l+1
                             if float(words[2])<0:
-                                Negative_conformer_list_file.write("Negative frequencies in conformer{}".format(i))
+                                Negative_conformer=True
+                    if Negative_conformer==True:
+                        Negative_conformer_list_file.write("Negative frequencies in conformer{} \n".format(i))
                     RXYZ_FILE.write('\n')
                     RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
                     RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))

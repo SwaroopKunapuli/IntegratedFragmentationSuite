@@ -58,7 +58,6 @@ for number_of_precursors in range(0,2):
 
     for ion in daughter_ions[:-1]:
         name="{}{}_{}{}_{}{}".format(ion[1][0],ion[2][0],ion[1][1],ion[2][1],ion[1][2],ion[2][2])
-        ## FINDING A WAY TO ONLY SAMPLE CONFORMERS FOR CLUSTERS THAT WERE NOT SAMPLED BEFORE
         if name in Cluster_Combination_Object.ion_dict:
             print("Cluster already sampled")
         if name not in Cluster_Combination_Object.ion_dict: 
@@ -66,4 +65,3 @@ for number_of_precursors in range(0,2):
             output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
             ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
             os.chdir("../")
-            print(Cluster_Combination_Object.ion_dict)
