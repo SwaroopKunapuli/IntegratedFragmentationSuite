@@ -79,14 +79,14 @@ class Cluster_Combination_Object(object):
         return output_xyz, output_dir
     
     # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
-    def GetFrequencies(self,properties_directory):
+    def GetFrequencies(self,properties_directory,FRAGMENTS_DATABASE):
         if os.path.exists('cre_members'):
             f = open("cre_members",'r')
             lines=f.readlines()
             number_of_conformers=int(lines[0])
-            Negative_conformer=False
             Negative_conformer_list_file=open("Negative_Frequency_conformers_{}.txt".format(output_dir),'a+')
             for i in range(1,number_of_conformers+1):
+                Negative_conformer=False
                 RXYZ_FILE=open(f'{output_dir}_{i}.rxyz','a+')
                 struc_xyz=open(f'{properties_directory}/TMPCONF{i}/struc.xyz','r')
                 struc_xyz_lines=struc_xyz.readlines()
@@ -112,6 +112,8 @@ class Cluster_Combination_Object(object):
                                 Negative_conformer=True
                     if Negative_conformer==True:
                         Negative_conformer_list_file.write("Negative frequencies in conformer{} \n".format(i))
+                    if Negative_conformer==False:
+                        FRAGMENTS_DATABASE.write("{}_{}  {} 1 0 1 {}/{}_{}.xyz {} \n".format(output_dir,i,self.ion[3],output_dir,output_dir,i,energy))
                     RXYZ_FILE.write('\n')
                     RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
                     RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
@@ -119,9 +121,10 @@ class Cluster_Combination_Object(object):
             Negative_conformer_list_file.close()
         else:
             print("No cre_members file!!")
-
+    #def add_to_fragment_database(self,):
+            
     # using CREST software to sample the conformational space
-    def crest_sampling(self,output_xyz,output_dir ):
+    def crest_sampling(self,output_xyz,output_dir,FRAGMENTS_DATABASE):
         if os.path.exists(output_dir):
             subprocess.run(["cp",output_xyz,output_dir])
         else:
@@ -133,5 +136,6 @@ class Cluster_Combination_Object(object):
         crest_hess_output=open('crest_hess_output.txt','w')
         subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--gfn2//gfnff","--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],stdout=crest_hess_output)
         if os.path.exists('PROP'):
-            self.GetFrequencies('PROP')
-    #def add_to_fragment_database(self,):
+            self.GetFrequencies('PROP',FRAGMENTS_DATABASE)
+        
+    

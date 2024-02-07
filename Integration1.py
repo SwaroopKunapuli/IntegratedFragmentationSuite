@@ -54,7 +54,7 @@ for number_of_precursors in range(0,2):
     #subprocess.run(["mkdir","RXYZ_FILES"])
 
     #M3C_INPUT_FILE=open("{}{}_{}{}_{}{}.m3c".format(parent_ion[0][0],parent_ion[1][0],parent_ion[0][1],parent_ion[1][1]),'w') #NAMING THE M3C INPUT FILE
-    #FRAGMENTS_DATABASE=open('FRAGMENTS_DATABASE.TXT','a+')
+    Fragments_Database=open('FRAGMENTS_DATABASE.txt','a+')
 
     for ion in daughter_ions[:-1]:
         name="{}{}_{}{}_{}{}".format(ion[1][0],ion[2][0],ion[1][1],ion[2][1],ion[1][2],ion[2][2])
@@ -63,5 +63,6 @@ for number_of_precursors in range(0,2):
         if name not in Cluster_Combination_Object.ion_dict: 
             ion_object=Cluster_Combination_Object(ion,xyz_files,n)
             output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
-            ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir)
+            ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir,FRAGMENTS_DATABASE=Fragments_Database)
             os.chdir("../")
+    Fragments_Database.close()
