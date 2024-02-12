@@ -33,6 +33,8 @@ for i in range(1,n+1):
     print("Its Multiplicity:")
     uhf.append(input())
 print(fundamental_moieties)
+Global_Fragment_Database_dict={}
+
 for number_of_precursors in range(0,2):
     number_of_moieties=[]
     print("Enter the composition of the precursor ion")
@@ -56,25 +58,36 @@ for number_of_precursors in range(0,2):
     M3C_INPUT_FILE=open("{}{}_{}{}_{}{}.m3c".format(parent_ion[0][0],parent_ion[1][0],parent_ion[0][1],parent_ion[1][1],parent_ion[0][2],parent_ion[1][2]),'a+') #NAMING THE M3C INPUT FILE
     with open("M3C_TEMPLATE.m3c",'r') as M3C_TEMPLATE:
         M3C_INPUT_FILE.writelines(M3C_TEMPLATE.readlines())
-    Fragments_Database=open('FRAGMENTS_DATABASE.txt','a+') ### FIRST PLACE  OF CHANGE WHERE FRAGMENTS_DATABASE variable is a LIST OF STRINGS OF THE LINES IN FRAGMENTS DATABASE! 
+    
+    #Fragments_Database=open('FRAGMENTS_DATABASE.txt','a+') 
+    ### FIRST PLACE  OF CHANGE WHERE FRAGMENTS_DATABASE variable is a LIST OF STRINGS OF THE LINES IN FRAGMENTS DATABASE! 
     ### MAKE TWO VARIABLES FOR LIST OF STRINGS THAT CONSTITUTE FRAGMENT DATABASE, ONE THAT IS GLOBAL AND HELPS AVOID DOUBLE SAMPLING, ONE THAT IS SPECIFIC TO THE PARENT ION 
     ## THAT CAN INHERIT THE ATTRIBUTES OF ION THAT WERE ALREADY SAMPLED.
+    
+    Fragments_Database = []
+
 
     for ion in daughter_ions[:-1]:
+        Conformers_Database=[]
         res = [i+j for i,j in zip([str(x) for x in ion[1][:]],ion[2][:])]
         name = '_'.join(res)
-        if name in Cluster_Combination_Object.ion_dict:
-            print("Cluster already sampled")
-        if name not in Cluster_Combination_Object.ion_dict: 
+        if name in Global_Fragment_Database_dict:
+            Fragments_Database.extend(Global_Fragment_Database_dict[name])
+            print("Cluster already sampled!")
+        
+        ##if name in Cluster_Combination_Object.ion_dict:
+        
+        ##    print("Cluster already sampled")
+        #if name not in Cluster_Combination_Object.ion_dict:
+        if name not in Global_Fragment_Database_dict: 
             ion_object=Cluster_Combination_Object(ion,xyz_files,n)
             output_xyz, output_dir = ion_object.packmol_xyz_file_generation()
-            ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir,FRAGMENTS_DATABASE=Fragments_Database)
-            os.chdir("../")
-    print("Before Fragments written")
-    Fragments_Database.close()
-    with open("FRAGMENTS_DATABASE.txt",'r') as Fragments_Database:
-        M3C_INPUT_FILE.writelines(Fragments_Database.readlines())
-    print("After Fragments written")
+            ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir,CONFORMERS_DATABASE=Conformers_Database)
+            Fragments_Database.extend(Conformers_Database)
+            Global_Fragment_Database_dict[name]=Conformers_Database
+            os.chdir("../")    
+    ##Fragments_Database.close()
+    M3C_INPUT_FILE.writelines(line + '\n' for line in Fragments_Database)
     M3C_INPUT_FILE.write("END FRAGMENTS_DATABASE")
     M3C_INPUT_FILE.close()
     

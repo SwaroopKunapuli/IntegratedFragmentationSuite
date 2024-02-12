@@ -53,16 +53,12 @@ def FragmentationGraph(parent_ion,n,charges):
 #                             c) best cluster conformer to go to their parent ion object
     
 class Cluster_Combination_Object(object):
-    ion_dict={}
     def __init__(self,ion,xyz_files,number_of_fundamental_moieties):
         """
         Generating packed .xyz file from Packmol with pypackmol wrapper for each of the ions in the parent/daughter ions list.
         
         """
         self.ion = ion
-        res_class = [i+j for i,j in zip([str(x) for x in ion[1][:]],ion[2][:])]
-        name_ion='_'.join(res_class)
-        Cluster_Combination_Object.ion_dict[name_ion] = self
         self.xyz_files=xyz_files
         self.number_of_fundamental_moieties =number_of_fundamental_moieties
 
@@ -73,14 +69,15 @@ class Cluster_Combination_Object(object):
                 pm.add_structure(self.xyz_files[i],count=self.ion[1][i],input_format="xyz")
         global output_xyz
         global output_dir
-        print(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
-        output_dir="{}{}_{}{}_{}{}".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
-        output_xyz="{}{}_{}{}_{}{}.xyz".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
+        res=[i+j for i,j in zip([str(x) for x in self.ion[1][:]],self.ion[2][:])]
+        print(res)
+        output_dir='_'.join(res)
+        output_xyz="{}.xyz".format(output_dir)
         result=pm.pack(output=str(output_xyz))
         return output_xyz, output_dir
     
     # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
-    def GetFrequencies(self,properties_directory,FRAGMENTS_DATABASE):
+    def GetFrequencies(self,properties_directory,CONFORMERS_DATABASE):
         if os.path.exists('cre_members'):
             f = open("cre_members",'r')
             lines=f.readlines()
@@ -114,7 +111,7 @@ class Cluster_Combination_Object(object):
                     if Negative_conformer==True:
                         Negative_conformer_list_file.write("Negative frequencies in conformer{} \n".format(i))
                     if Negative_conformer==False:
-                        FRAGMENTS_DATABASE.write("{}_{}  {} 1 0 1 {}/{}_{}.rxyz {} \n".format(output_dir,i,self.ion[3],output_dir,output_dir,i,str(27.2114*float(energy))))
+                        CONFORMERS_DATABASE.append("{}_{}  {} 1 0 1 {}/{}_{}.rxyz {}".format(output_dir,i,self.ion[3],output_dir,output_dir,i,str(27.2114*float(energy))))
                     RXYZ_FILE.write('\n')
                     RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
                     RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
@@ -122,10 +119,9 @@ class Cluster_Combination_Object(object):
             Negative_conformer_list_file.close()
         else:
             print("No cre_members file!!")
-    #def add_to_fragment_database(self,):
             
     # using CREST software to sample the conformational space
-    def crest_sampling(self,output_xyz,output_dir,FRAGMENTS_DATABASE):
+    def crest_sampling(self,output_xyz,output_dir,CONFORMERS_DATABASE):
         if os.path.exists(output_dir):
             subprocess.run(["cp",output_xyz,output_dir])
         else:
@@ -137,6 +133,6 @@ class Cluster_Combination_Object(object):
         crest_hess_output=open('crest_hess_output.txt','w')
         subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--gfn2//gfnff","--for","crest_conformers.xyz","--prop","hess","--T","5","&&"],stdout=crest_hess_output)
         if os.path.exists('PROP'):
-            self.GetFrequencies('PROP',FRAGMENTS_DATABASE)
+            self.GetFrequencies('PROP',CONFORMERS_DATABASE)
         
     
