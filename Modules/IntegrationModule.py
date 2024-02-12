@@ -61,7 +61,21 @@ class Cluster_Combination_Object(object):
         self.ion = ion
         self.xyz_files=xyz_files
         self.number_of_fundamental_moieties =number_of_fundamental_moieties
-
+    
+    def parent_packmol_xyz_file_generation(self):
+        pm = pyp.Packmol(dimension=10)
+        for i in range(0,self.number_of_fundamental_moieties):
+            if self.ion[0][i]>0:
+                pm.add_structure(self.xyz_files[i],count=self.ion[0][i],input_format="xyz")
+        global output_xyz
+        global output_dir
+        res=[i+j for i,j in zip([str(x) for x in self.ion[0][:]],self.ion[1][:])]
+        print(res)
+        output_dir='_'.join(res)
+        output_xyz="{}.xyz".format(output_dir)
+        result=pm.pack(output=str(output_xyz))
+        return output_xyz, output_dir
+    
     def packmol_xyz_file_generation(self):
         pm = pyp.Packmol(dimension=10)
         for i in range(0,self.number_of_fundamental_moieties):
