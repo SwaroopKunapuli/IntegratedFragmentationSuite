@@ -60,7 +60,8 @@ class Cluster_Combination_Object(object):
         
         """
         self.ion = ion
-        name_ion="{}{}_{}{}_{}{}".format(self.ion[1][0],self.ion[2][0],self.ion[1][1],self.ion[2][1],self.ion[1][2],self.ion[2][2])
+        res_class = [i+j for i,j in zip([str(x) for x in ion[1][:]],ion[2][:])]
+        name_ion='_'.join(res_class)
         Cluster_Combination_Object.ion_dict[name_ion] = self
         self.xyz_files=xyz_files
         self.number_of_fundamental_moieties =number_of_fundamental_moieties
@@ -113,7 +114,7 @@ class Cluster_Combination_Object(object):
                     if Negative_conformer==True:
                         Negative_conformer_list_file.write("Negative frequencies in conformer{} \n".format(i))
                     if Negative_conformer==False:
-                        FRAGMENTS_DATABASE.write("{}_{}  {} 1 0 1 {}/{}_{}.xyz {} \n".format(output_dir,i,self.ion[3],output_dir,output_dir,i,energy))
+                        FRAGMENTS_DATABASE.write("{}_{}  {} 1 0 1 {}/{}_{}.rxyz {} \n".format(output_dir,i,self.ion[3],output_dir,output_dir,i,str(27.2114*float(energy))))
                     RXYZ_FILE.write('\n')
                     RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
                     RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
