@@ -60,15 +60,17 @@ for number_of_precursors in range(0,2):
     if name_parent not in Global_Fragment_Database_dict:
         parent_ion_object=Cluster_Combination_Object(parent_ion,xyz_files,n)
         output_xyz, output_dir = parent_ion_object.parent_packmol_xyz_file_generation()
-        parent_ion_object.crest_sampling(output_xyz=output_xyz,output_dir=output_dir,CONFORMERS_DATABASE=Parent_Conformers_Database)
+        parent_ion_object.parent_crest_sampling(output_xyz=output_xyz,output_dir=output_dir,CONFORMERS_DATABASE=Parent_Conformers_Database)
         Fragments_Database.extend(Parent_Conformers_Database)
         Global_Fragment_Database_dict[name_parent]=Parent_Conformers_Database
         os.chdir("../")
 
     M3C_INPUT_FILE=open("{}.m3c".format(name_parent),'a+') 
     with open("M3C_TEMPLATE.m3c",'r') as M3C_TEMPLATE:
-        M3C_INPUT_FILE.writelines(M3C_TEMPLATE.readlines())
-    
+        M3C_TEMPLATE_READLINES=M3C_TEMPLATE.readlines()
+        M3C_INPUT_FILE.writelines(M3C_TEMPLATE_READLINES[0:16])
+        M3C_INPUT_FILE.write("reactives =  {} \n".format(name_parent))
+        M3C_INPUT_FILE.writelines(M3C_TEMPLATE_READLINES[17:])
     for ion in daughter_ions[:-1]:
         Conformers_Database=[]
         res = [i+j for i,j in zip([str(x) for x in ion[1][:]],ion[2][:])]

@@ -1,0 +1,4 @@
+  dft(
+  xc = HF
+  ao = 'STO-3G'
+  )
