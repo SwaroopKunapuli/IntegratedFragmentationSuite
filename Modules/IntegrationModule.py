@@ -108,7 +108,7 @@ class Cluster_Combination_Object(object):
             AutoMeKin_Input_File.write("charge {} \n".format(charge))
             AutoMeKin_Input_File.writelines(AutoMeKin_Template_lines[2:])
         AutoMeKin_Input_File.close()
-        subprocess_llcalcs_procees = subprocess.Popen("nohup llcalcs.sh {}_{}.dat 3 3 3 >llcals.log 2>&1 &".format(name,i),stdout=subprocess.PIPE,shell=True)
+        subprocess_llcalcs_procees = subprocess.Popen("nohup llcalcs.sh {}_{}.dat 5 5 5 >llcals.log 2>&1 &".format(name,i),stdout=subprocess.PIPE,shell=True)
         (subprocess_llcalcs_output, subprocess_llcalcs_error) = subprocess_llcalcs_procees.communicate()
         subprocess_llcalcs_status = subprocess_llcalcs_procees.wait()
         print("Subprocess output : {}".format(subprocess_llcalcs_output))
