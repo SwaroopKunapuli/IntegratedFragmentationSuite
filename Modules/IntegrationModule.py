@@ -130,7 +130,6 @@ class Cluster_Combination_Object(object):
         return TS_DE       
 
 
-
     # Calculate the frequencies and the total energy of the system and output the 1) RXYZ files of each conformer 
     def GetFrequencies(self,properties_directory,CONFORMERS_DATABASE,charge):
         if os.path.exists('cre_members'):
@@ -140,17 +139,37 @@ class Cluster_Combination_Object(object):
             Negative_conformer_list_file=open("Negative_Frequency_conformers_{}.txt".format(output_dir),'a+')
             for i in range(1,number_of_conformers+1):
                 Negative_conformer=False
-                RXYZ_FILE=open(f'{output_dir}_{i}.rxyz','a+')
+                xyz_file=open(output_xyz,'r')
+                num_H=0
+                num_C=0
+                num_N=0
+                num_O=0
+                num_Cl=0
+                xyz_file_lines=xyz_file.readlines()
+                for line in xyz_file_lines:
+                    words=line.split()
+                    if words[0] == 'H':
+                        num_H=num_H+1
+                    if words[0] == 'C':
+                        num_C=num_C+1
+                    if words[0] == 'N':
+                        num_N=num_N+1
+                    if words[0] == 'O':
+                        num_O=num_O+1
+                    if words[0] == 'Cl':
+                        num_Cl=num_Cl+1
+                RXYZ_FILE_name=f'H{num_H}C{num_C}N{num_N}O{num_O}Cl{num_Cl}.q{charge}.m1.{i}.rxyz'
+                RXYZ_FILE=open(RXYZ_FILE_name,'a+')
                 if os.path.exists('{}/TMPCONF{}/xtbopt.xyz'.format(properties_directory,i)):
                     xtb_opt_xyz=open(f'{properties_directory}/TMPCONF{i}/xtbopt.xyz','r')
                     xtb_opt_xyz_lines=xtb_opt_xyz.readlines()
                     RXYZ_FILE.write(xtb_opt_xyz_lines[0])
-                    TS_DE = self.AutoMeKin_llcals(xtb_opt_xyz_lines,i,output_dir,charge)
-                    xtb_out=open(f'{properties_directory}/TMPCONF{i}/xtb.out','r')
-                    xtb_out_lines=xtb_out.readlines()
-                    for line in reversed(list(xtb_out_lines)): 
+                   # TS_DE = self.AutoMeKin_llcals(xtb_opt_xyz_lines,i,output_dir,charge)
+                    censo_out=open("censo.out",'r')
+                    censo_out_lines=censo_out.readlines()
+                    for line in list(censo_out_lines):
                         words=line.split()
-                        if len(words)>3 and words[1]=='total' and words[2]=='energy':
+                        if len(words)>3 and words[0] == f'CONF{i}':
                             energy = words[3]
                     RXYZ_FILE.write("Energy = {}\n".format(energy))
                     RXYZ_FILE.write("".join(line for line in xtb_opt_xyz_lines[2:]))
@@ -169,7 +188,7 @@ class Cluster_Combination_Object(object):
                         if Negative_conformer==True:
                             Negative_conformer_list_file.write("Negative frequencies in conformer{} \n".format(i))
                         if Negative_conformer==False:
-                            CONFORMERS_DATABASE.append("{}_{}  {} 1 0 1 {}/{}_{}.rxyz {} {}".format(output_dir,i,self.ion[3],output_dir,output_dir,i,str(27.2114*float(energy)),TS_DE))
+                            CONFORMERS_DATABASE.append("H{}C{}N{}O{}Cl{}_{} {}  1 0 1 {}/{} {}".format(num_H,num_C,num_N,num_O,num_Cl,i,charge,output_dir,RXYZ_FILE_name,str(27.2114*float(energy))))
                         RXYZ_FILE.write('\n')
                         RXYZ_FILE.write("FREQUENCIES %d \n" %l) 
                         RXYZ_FILE.write('\n'.join(str(freq) for freq in frequencies))
@@ -177,7 +196,13 @@ class Cluster_Combination_Object(object):
                     Negative_conformer_list_file.write("NOT CONVERGED IN conformer{} \n".format(i))
                 else:
                     print("Some error!")
+                RXYZ_FILE.write('\n')
+                RXYZ_FILE.write("\n")
+                RXYZ_FILE.write("SYMMETRY C1\n")
+                RXYZ_FILE.write("ELECTRONIC_STATE 1-A")
                 RXYZ_FILE.close()
+                if Negative_conformer==False:
+                    subprocess.run(["cp",RXYZ_FILE_name,"/home/software/IntegratedFragmentationSuite/M3C_STORE"])
             Negative_conformer_list_file.close()
         else:
             print("No cre_members file!!")
@@ -194,10 +219,41 @@ class Cluster_Combination_Object(object):
             subprocess.run(["cp","AutoMekin_Template.dat",output_dir])
             subprocess.run(["cp","qcore_template",output_dir])
         os.chdir(output_dir)
+        time_run=3.0
         crest_nci_output=open("crest_nci_output.txt","w")
-        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen","0.5","&&"],stdout=crest_nci_output)
+        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen",str(time_run),"&&"],stdout=crest_nci_output)
+        cre_members_nci=open('cre_members','r')
+        cre_members_nci_lines=cre_members_nci.readlines()
+        num_cycles=0
+        while cre_members_nci_lines[0].split()[0] == '1' and num_cycles<10 :
+            num_cycles=num_cycles+1
+            time_run=time_run+10.0
+            crest_nci_output=open("crest_nci_output.txt","w")
+            subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen",str(time_run),"&&"],stdout=crest_nci_output)
+            cre_members_nci=open('cre_members','r')
+            cre_members_nci_lines=cre_members_nci.readlines()
         crest_hess_output=open('crest_hess_output.txt','w')
         subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--for","crest_conformers.xyz","--prop","ohess","--gfn2","--T","5","&&"],stdout=crest_hess_output)
+        # NEED TO ADD MORE SAMPLING OF NCI AND GFN2 Optimisation if only 1 conformer after GFN2 optimisation
+        cre_members_hess=open('PROP/cre_members','r')
+        cre_members_hess_lines=cre_members_hess.readlines()
+        num_cycles=0
+        while cre_members_hess_lines[0].split()[0] == '1' and  num_cycles<10:
+            num_cycles=num_cycles+1
+            time_run=time_run+10.0
+            crest_nci_output=open("crest_nci_output.txt","w")
+            subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--nci","--gfn2//gfnff","--T","5","--mdlen",str(time_run),"&&"],stdout=crest_nci_output)
+            cre_members_nci=open('cre_members','r')
+            cre_members_nci_lines=cre_members_nci.readlines()
+            crest_hess_output=open('crest_hess_output.txt','w')
+            subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[3]),"--for","crest_conformers.xyz","--prop","ohess","--gfn2","--T","5","&&"],stdout=crest_hess_output)
+            cre_members_hess=open('PROP/cre_members','r')
+            cre_members_hess_lines=cre_members_hess.readlines()
+        cre_members_nci_opt=open('crest_ensemble_opt.xyz','a+')
+        for i in range(1,int(cre_members_nci_lines[0].split()[0])+1):
+            subprocess.run(["cat",f"PROP/TMPCONF{i}/xtbopt.xyz"],stdout=cre_members_nci_opt)
+        censo_part0_output=open("censo.out",'w')
+        subprocess.run(["censo","-inprc","~/.censorc","-inp","crest_ensemble_opt.xyz","-part0","on","-chrg",str(self.ion[3])],stdout=censo_part0_output)
         if os.path.exists('PROP'):
             self.GetFrequencies('PROP',CONFORMERS_DATABASE,self.ion[3])
 
@@ -212,10 +268,41 @@ class Cluster_Combination_Object(object):
             subprocess.run(["cp","AutoMekin_Template.dat",output_dir])
             subprocess.run(["cp","qcore_template",output_dir])
         os.chdir(output_dir)
+        time_run=3.0
         crest_nci_output=open("crest_nci_output.txt","w")
-        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[2]),"--nci","--gfn2//gfnff","--T","5","--mdlen","0.5","&&"],stdout=crest_nci_output)
+        subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[2]),"--nci","--gfn2//gfnff","--T","5","--mdlen",str(time_run),"&&"],stdout=crest_nci_output)
+        cre_members_nci=open('cre_members','r')
+        cre_members_nci_lines=cre_members_nci.readlines()
+        num_cycles=0
+        while cre_members_nci_lines[0].split()[0] == '1' and num_cycles<10 :
+            num_cycles=num_cycles+1
+            time_run=time_run+10.0
+            crest_nci_output=open("crest_nci_output.txt","w")
+            subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[2]),"--nci","--gfn2//gfnff","--T","5","--mdlen",str(time_run),"&&"],stdout=crest_nci_output)
+            cre_members_nci=open('cre_members','r')
+            cre_members_nci_lines=cre_members_nci.readlines()
         crest_hess_output=open('crest_hess_output.txt','w')
         subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[2]),"--for","crest_conformers.xyz","--prop","ohess","--gfn2","--T","5","&&"],stdout=crest_hess_output)
+        # NEED TO ADD MORE SAMPLING OF NCI AND GFN2 Optimisation if only 1 conformer after GFN2 optimisation
+        cre_members_hess=open('PROP/cre_members','r')
+        cre_members_hess_lines=cre_members_hess.readlines()
+        num_cycles=0
+        while cre_members_hess_lines[0].split()[0] == '1' and  num_cycles<10:
+            num_cycles=num_cycles+1
+            time_run=time_run+10.0
+            crest_nci_output=open("crest_nci_output.txt","w")
+            subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[2]),"--nci","--gfn2//gfnff","--T","5","--mdlen",str(time_run),"&&"],stdout=crest_nci_output)
+            cre_members_nci=open('cre_members','r')
+            cre_members_nci_lines=cre_members_nci.readlines()
+            crest_hess_output=open('crest_hess_output.txt','w')
+            subprocess.run(["crest",output_xyz,"--chrg",str(self.ion[2]),"--for","crest_conformers.xyz","--prop","ohess","--gfn2","--T","5","&&"],stdout=crest_hess_output)
+            cre_members_hess=open('PROP/cre_members','r')
+            cre_members_hess_lines=cre_members_hess.readlines()
+        cre_members_nci_opt=open('crest_ensemble_opt.xyz','a+')
+        for i in range(1,int(cre_members_nci_lines[0].split()[0])+1):
+            subprocess.run(["cat",f"PROP/TMPCONF{i}/xtbopt.xyz"],stdout=cre_members_nci_opt)
+        censo_part0_output=open("censo.out",'w')
+        subprocess.run(["censo","-inprc","~/.censorc","-inp","crest_ensemble_opt.xyz","-part0","on","-chrg",str(self.ion[2])],stdout=censo_part0_output)
         if os.path.exists('PROP'):
             self.GetFrequencies('PROP',CONFORMERS_DATABASE,self.ion[2])
         
